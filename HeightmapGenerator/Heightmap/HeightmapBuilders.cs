@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GalaxyShapeGenerator.Generator;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,49 +8,44 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace GalaxyShapeGenerator.Generator
+namespace Heightmap.Builders
 {
-    public static class Gradient
+    public enum GradientType
     {
+        CircularGradient,
+        LinearGradient,
+        PerlinNoise
+    }
 
-        public static float[,] RectangularGradient(int width, int height)
+    public static class HeightmapBuilders
+    {
+        private static readonly Noise noise = new Noise();
+
+
+        public static float[,] GenerateHeightmap(int width, int height, GradientType gradient, float scale, int octaves, float persistence, float lacunarity, Vector2 offset, string bitmapMaskPath = "")
         {
-            float[,] map = new float[width, height];
 
-
-            for (int i = 0; i < width; i++)
+            return gradient switch
             {
-                for (int j = 0; j < height; j++)
-                {
-                    //float x = x / (float)width * 2 - 1;
-                    //float y = y / (float)height * 2 - 1;
-                    //float value = MathF.Max(MathF.Abs(x), MathF.Abs(y));
-
-
-
-                    float x = i / (float)width *2;
-                    float y = j / (float)height *2;
-
-                    float value = MathF.Atan(x/y);
-
-                    map[i, j] = value;
-                }
-            }
-
-
-            return map;
+                GradientType.CircularGradient => CircularGradient(width, height, scale),
+                GradientType.LinearGradient => LinearGradient(width, height),
+                GradientType.PerlinNoise => SimplexNoise(width, height, scale, octaves, persistence, lacunarity, offset,bitmapMaskPath),
+                _ => new float[0, 0],
+            };
         }
 
+
+  
         public static float[,] LinearGradient(int width, int height)
         {
             float[,] map = new float[width, height];
 
-            for (int i = 0; i < width; i++)
+            for (int x = 0; x < width; x++)
             {
-                for (int j = 0; j < height; j++)
+                for (int y = 0; y < height; y++)
                 {              
-                    float value = i / (float)width;
-                    map[i, j] = value;
+                    float value = x / (float)width;
+                    map[x, y] = value;
                 }
             }
 
@@ -60,15 +56,11 @@ namespace GalaxyShapeGenerator.Generator
 
         public static float[,] CircularGradient(int width, int height,float scale)
         {
-
             float[,] map = new float[width, height];
-
-            //https://en.wikipedia.org/wiki/Gaussian_function
-            //https://en.wikipedia.org/wiki/Gaussian_blur
 
             int centerX = width /2;
             int centerY = width / 2;
-            float sigma = scale; //Zoom level
+            float sigma = scale;
 
 
             for (int x = 0; x < width; x++)
@@ -84,35 +76,17 @@ namespace GalaxyShapeGenerator.Generator
             return map;
         }
 
-        public static float[,] CustomGradient(int width, int height)
+
+        public static float[,] SimplexNoise(int width, int height,float scale, int octaves, float persistence, float lacunarity, Vector2 offset,string bitmapMaskPath = "")
         {
-            int size = (width + height) / 2;
+            Bitmap? mask = new Bitmap(width, height);
 
-            float[,] map = new float[size, size];
-
-            for (int x = 0; x < width; x++)
+            if (bitmapMaskPath != "")
             {
-                for (int y = 0; y < height; y++)
-                {
-                    // Compute density based on distance from center
-                    float distance = MathF.Sqrt((x - width / 2f) * (x - width / 2f) + (y - height / 2f) * (y - height / 2f));
-                    float density = Math.Clamp(distance / (width / 2f),0,1);
-
-
-                    map[x, y] = density;
-                }
+                mask = new Bitmap(width, height, ImageToBytes(bitmapMaskPath));
             }
+            
 
-            return map;
-        }
-
-
-        public static float[,] SimplexNoise(int width, int height,float scale, int octaves, float persistence, float lacunarity, Vector2 offset)
-        {
-            //byte[] data = ImageToBytes(Path.Combine(Environment.CurrentDirectory, @"mask.bmp"));
-            //Bitmap galaxyMask = new Bitmap(width, height, data);
-
-            var noise = new Noise();
 
             Random rnd = new Random(25565);
             Vector2[] octaveOffsets = new Vector2[octaves];
@@ -128,7 +102,6 @@ namespace GalaxyShapeGenerator.Generator
 
             float maxNoiseHeight = float.MinValue;
             float minNoiseHeight = float.MaxValue;
-
 
 
 
@@ -173,8 +146,11 @@ namespace GalaxyShapeGenerator.Generator
             {
                 for (int y = 0; y < height; y++)
                 {
+                    if(bitmapMaskPath == "")
+                        map[x, y] = Normalize(minNoiseHeight, maxNoiseHeight, map[x, y]);
+                    else
+                        map[x, y] = mask.GetPixelValue(x,y) - Normalize(minNoiseHeight, maxNoiseHeight, map[x, y])/10;
 
-                    map[x, y] = /*mask.GetPixelValue(x,y,scale/100) -*/ Normalize(minNoiseHeight, maxNoiseHeight, map[x, y])/*/10*/;
 
                     map[x, y] = MathF.Max(map[x, y], 0);
                     map[x, y] = MathF.Min(map[x, y], 1);
@@ -189,12 +165,12 @@ namespace GalaxyShapeGenerator.Generator
             return (value - min) / (max - min);
         }
 
+
+
         private static byte[] ImageToBytes(string path)
         {
             return File.ReadAllBytes(path);
         }
-
-
 
 
 
