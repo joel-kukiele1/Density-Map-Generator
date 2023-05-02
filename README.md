@@ -8,6 +8,11 @@ This library provides functions to generate images using noise and gradients. Ho
 ## Mask
 
 ![noise](https://user-images.githubusercontent.com/47719443/235771500-f512bcb9-e613-4245-aa47-b0a378999c71.png)   ![mask](https://user-images.githubusercontent.com/47719443/235771435-4f6f807b-1ed6-48d6-b004-1f7c2d5ae050.png)                    ![noise_with_mask](https://user-images.githubusercontent.com/47719443/235771588-75f36b4d-b86f-474b-bef0-f1a8aac2d9ba.png)
+
+
+# Thanks
+
+Thanks to [Benjamin Ward](https://github.com/WardBenjamin/SimplexNoise), the author of the Noise library.
        
 
 
