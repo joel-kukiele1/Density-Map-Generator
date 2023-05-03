@@ -11,34 +11,38 @@ namespace Heightmap
 
     public class Bitmap
     {
-        public readonly int Width;
-        public readonly int Height;
+        public readonly int width;
+        public readonly int height;
         private readonly byte[] data;
+        private readonly byte[] headerData;
+
+        private const int BITMAPINFOHEADER_LENGTH  = 54;
 
         public Bitmap(int width, int height, byte[]? data = null)
         {
-            Width = width;
-            Height = height;
+            this.width = width;
+            this.height = height;
+            headerData = new byte[BITMAPINFOHEADER_LENGTH];
 
             if (data == null)
                 this.data = new byte[width * height * 4];
             else
             {
-                List<byte> dataList = data.ToList();
-                ///<summary>
-                ///We assume that this bitmape image use the header "BITMAPINFOHEADER"
-                ///If you have any doubt, check https://en.wikipedia.org/wiki/BMP_file_format#DIB_header_(bitmap_information_header)
-                ///</summary>
-                dataList.RemoveRange(0, 54);
+                for (int i = 0; i < BITMAPINFOHEADER_LENGTH; i++)
+                    headerData[i] = data[i];
 
+                List<byte> dataList = data.ToList();
+
+                dataList.RemoveRange(0, BITMAPINFOHEADER_LENGTH);
                 this.data = dataList.ToArray();
             }
         }
 
+
         public void SetPixel(int x, int y, float value)
         {
             value *= 255;
-            int offset = (Width * y + x) * 4;
+            int offset = (width * y + x) * 4;
             data[offset] = (byte)value;
             data[offset + 1] = (byte)value;
             data[offset + 2] = (byte)value;
@@ -48,8 +52,8 @@ namespace Heightmap
 
         public void SetPixels(float[,] data)
         {
-            for (int x = 0; x < Width; x++)
-                for (int y = 0; y < Height; y++)
+            for (int x = 0; x < width; x++)
+                for (int y = 0; y < height; y++)
                     SetPixel(x, y, data[x, y]);
         }
 
@@ -60,7 +64,7 @@ namespace Heightmap
         {
             if (data != null)
             {
-                int offset = (Width * y + x) * 4;
+                int offset = (width * y + x) * 4;
 
                 byte r = data[offset];
                 byte g = data[offset + 1];
@@ -76,8 +80,8 @@ namespace Heightmap
 
         public float GetPixelValue(int x, int y, float scale)
         {
-            float centerX = Width / 2f;
-            float centerY = Height / 2f;
+            float centerX = width / 2f;
+            float centerY = height / 2f;
 
             float dx = (x - centerX) / scale + centerX;
             float dy = (y - centerY) / scale + centerY;
@@ -91,7 +95,7 @@ namespace Heightmap
             float fracX = dx - x1;
             float fracY = dy - y1;
 
-            if (x1 >= 0 && y1 >= 0 && x2 < Width && y2 < Height)
+            if (x1 >= 0 && y1 >= 0 && x2 < width && y2 < height)
             {
                 float topLeft = GetPixelValue(x1, y1);
                 float topRight = GetPixelValue(x2, y1);
@@ -108,6 +112,19 @@ namespace Heightmap
         }
 
 
+        public int GetWidthFromHeader()
+        {
+            return headerData == null ? 0 : BitConverter.ToInt32(headerData.AsSpan()[18..22]);
+        }
+
+        public int GetHeightFromHeader()
+        {
+            return headerData == null ? 0 : BitConverter.ToInt32(headerData.AsSpan()[22..26]);
+        }
+
+
+
+
 
 
         public byte[] GetBitmapImageData()
@@ -122,22 +139,23 @@ namespace Heightmap
             ///
 
             //TODO: Faire en sorte de prendre en compte tous les type de bitmap
-            const int bitmapHeaderSize = 54;
 
-            byte[] imgBytesBuffer = new byte[data.Length + bitmapHeaderSize];
+
+            //Bitmap file header
+            byte[] imgBytesBuffer = new byte[data.Length + BITMAPINFOHEADER_LENGTH];
             imgBytesBuffer[0] = (byte)'B';
             imgBytesBuffer[1] = (byte)'M';
-
-            //Size of the header in bytes (40 according to wikipedia)
-            imgBytesBuffer[14] = 40;
-
             Array.Copy(BitConverter.GetBytes(imgBytesBuffer.Length), 0, imgBytesBuffer, 2, 4);
-            Array.Copy(BitConverter.GetBytes(bitmapHeaderSize), 0, imgBytesBuffer, 10, 4);
-            Array.Copy(BitConverter.GetBytes(Width), 0, imgBytesBuffer, 18, 4);
-            Array.Copy(BitConverter.GetBytes(Height), 0, imgBytesBuffer, 22, 4);
-            Array.Copy(BitConverter.GetBytes(32), 0, imgBytesBuffer, 28, 2);
+            Array.Copy(BitConverter.GetBytes(BITMAPINFOHEADER_LENGTH), 0, imgBytesBuffer, 10, 4);
+
+            //DIB header
+            Array.Copy(BitConverter.GetBytes(40), 0, imgBytesBuffer, 14, 4); //Size of the header in bytes (40 according to wikipedia)
+            Array.Copy(BitConverter.GetBytes(width), 0, imgBytesBuffer, 18, 4);
+            Array.Copy(BitConverter.GetBytes(height), 0, imgBytesBuffer, 22, 4);
+            Array.Copy(BitConverter.GetBytes(32), 0, imgBytesBuffer, 28, 2); //The number of bits per pixel, which is the color depth of the image.
             Array.Copy(BitConverter.GetBytes(data.Length), 0, imgBytesBuffer, 34, 4);
-            Array.Copy(data, 0, imgBytesBuffer, bitmapHeaderSize, data.Length);
+
+            Array.Copy(data, 0, imgBytesBuffer, BITMAPINFOHEADER_LENGTH, data.Length);
 
             return imgBytesBuffer;
         }
