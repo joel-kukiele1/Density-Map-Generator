@@ -13,9 +13,9 @@ namespace tests
         {
             Bitmap bmp = new(width, height);
 
-            string bitmapMaskPath = ""; //Path.Combine(Environment.CurrentDirectory, @"mask.bmp");
+            string bitmapMaskPath = Path.Combine(Environment.CurrentDirectory, @"masks/mask.bmp");
 
-            float[,]  data = HeightmapBuilders.GenerateHeightmap(width, height, GradientType.CircularGradient, 70, 16, 0.5f, 2, new Vector2(0, 0), bitmapMaskPath);
+            float[,]  data = HeightmapBuilders.GenerateHeightmap(width, height, GradientType.PerlinNoise, 100, 16, 0.5f, 2, new Vector2(0, 0), bitmapMaskPath);
             bmp.SetPixels(data);
 
             SaveFile(bmp, @$"C:\jnk\heightmap_{DateTime.Now.ToShortDateString()}.bmp");

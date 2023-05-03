@@ -8,17 +8,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="mask\**" />
+    <EmbeddedResource Remove="mask\**" />
+    <None Remove="mask\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="mask.bmp" />
+    <None Remove="masks\mask.bmp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="masks\mask.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Heightmap\Heightmap.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="mask.bmp">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
