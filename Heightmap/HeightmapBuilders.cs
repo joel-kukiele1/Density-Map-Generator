@@ -1,4 +1,4 @@
-﻿using GalaxyShapeGenerator.Generator;
+using GalaxyShapeGenerator.Generator;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -146,10 +146,12 @@ namespace Heightmap.Builders
             {
                 for (int y = 0; y < height; y++)
                 {
-                    if(bitmapMaskPath == "")
-                        map[x, y] = Normalize(minNoiseHeight, maxNoiseHeight, map[x, y]);
+                    float normalizedValue = Normalize(minNoiseHeight, maxNoiseHeight, map[x, y]);
+
+                    if (bitmapMaskPath == "")
+                        map[x, y] = normalizedValue;
                     else
-                        map[x, y] = mask.GetPixelValue(x,y) - Normalize(minNoiseHeight, maxNoiseHeight, map[x, y])/10;
+                        map[x, y] = mask.GetPixelValue(x,y,scale/100) - normalizedValue/ 10;
 
 
                     map[x, y] = MathF.Max(map[x, y], 0);
