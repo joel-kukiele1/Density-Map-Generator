@@ -173,8 +173,5 @@ namespace Heightmap.Builders
         }
 
 
-
-
-
     }
 }
