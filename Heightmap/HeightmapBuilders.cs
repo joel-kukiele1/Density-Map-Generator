@@ -167,7 +167,7 @@ namespace Heightmap.Builders
 
 
 
-        private static byte[] ImageToBytes(string path)
+        private static byte[]? ImageToBytes(string path)
         {
             if(!Directory.Exists(path))
                 return null;
