@@ -1,4 +1,4 @@
-using GalaxyShapeGenerator.Generator;
+﻿using GalaxyShapeGenerator.Generator;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -82,9 +82,8 @@ namespace Heightmap.Builders
             Bitmap? mask = new Bitmap(width, height);
 
             if (bitmapMaskPath != "")
-            {
                 mask = new Bitmap(width, height, ImageToBytes(bitmapMaskPath));
-            }
+            
             
 
 
@@ -171,7 +170,7 @@ namespace Heightmap.Builders
 
         private static byte[]? ImageToBytes(string path)
         {
-            if(!Directory.Exists(path))
+            if(!File.Exists(path))
                 return null;
 
             return File.ReadAllBytes(path);

@@ -18,7 +18,11 @@ namespace tests
             float[,]  data = HeightmapBuilders.GenerateHeightmap(width, height, GradientType.PerlinNoise, 100, 16, 0.5f, 2, new Vector2(0, 0), bitmapMaskPath);
             bmp.SetPixels(data);
 
-            SaveFile(bmp, @$"C:\jnk\heightmap_{DateTime.Now.ToShortDateString()}.bmp");
+
+
+            string documentsFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            SaveFile(bmp, @$"{documentsFolderPath}/heightmap_{DateTime.Now.ToShortDateString()}.bmp");
 
 
         }
