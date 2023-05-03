@@ -25,6 +25,8 @@ namespace Heightmap.Builders
         public static float[,] GenerateHeightmap(int width, int height, GradientType gradient, float scale, int octaves, float persistence, float lacunarity, Vector2 offset, string bitmapMaskPath = "")
         {
 
+
+
             return gradient switch
             {
                 GradientType.CircularGradient => CircularGradient(width, height, scale),
@@ -36,6 +38,8 @@ namespace Heightmap.Builders
 
 
   
+
+
         public static float[,] LinearGradient(int width, int height)
         {
             float[,] map = new float[width, height];
@@ -79,12 +83,26 @@ namespace Heightmap.Builders
 
         public static float[,] SimplexNoise(int width, int height,float scale, int octaves, float persistence, float lacunarity, Vector2 offset,string bitmapMaskPath = "")
         {
-            Bitmap? mask = new Bitmap(width, height);
+            Bitmap? mask = new Bitmap(0, 0);
 
             if (bitmapMaskPath != "")
-                mask = new Bitmap(width, height, ImageToBytes(bitmapMaskPath));
+            {
+                byte[]? data = ImageToBytes(bitmapMaskPath);
+
+                if(data != null)
+                {
+                    mask = new Bitmap(width, height, data);
+
+                    if (width != mask.GetWidthFromHeader() || height != mask.GetHeightFromHeader())
+                        throw new Exception("Mask width or height doesn't heightmap height or width");                    
+                }
+            }
+
+
             
-            
+
+
+
 
 
             Random rnd = new Random(25565);
